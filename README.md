@@ -13,52 +13,21 @@ Distribution like Centos5 are useful to generate artefact expected to run on
 a variety of Linux systems. It is for example useful in the context of project
 like `dockcross <https://github.com/dockcross/dockcross>`_ and `dockbuild <https://github.com/dockbuild/dockbuild>`_.
 
-### generating the package
+### generating the packages
 
 ```console
 mkdir /tmp/scratch && cd $_
 
-# Download dockbuild image 
-docker run --rm dockbuild/centos5-devtoolset2-gcc4 > ./dockbuild-centos5-devtoolset2-gcc4
-chmod +x ./dockbuild-centos5-devtoolset2-gcc4
+curl -LO -# https://raw.githubusercontent.com/dockbuild/CMake/welcome/generate_package.sh
+chmod u+x ./generate_package.sh
 
-# Download OpenSSL
-OPENSSL_ROOT=openssl-1.0.2o
-OPENSSL_HASH=ec3f5c9714ba0fd45cb4e087301eb1336c317e0d20b575a125050470e8089e4d
+CMAKE_VERSION=3.11.3
 
-curl -#LO https://www.openssl.org/source/${OPENSSL_ROOT}.tar.gz
-echo "${OPENSSL_HASH}  ${OPENSSL_ROOT}.tar.gz" > ${OPENSSL_ROOT}.tar.gz.sha256
-sha256sum -c ${OPENSSL_ROOT}.tar.gz.sha256
+# Build x86 package
+./generate_package.sh -cmake-version ${CMAKE_VERSION} -32
 
-tar -xf ${OPENSSL_ROOT}.tar.gz
-
-# Build OpenSSL
-./dockbuild-centos5-devtoolset2-gcc4 bash -c "cd ${OPENSSL_ROOT}; ./config no-ssl2 no-shared -fPIC --prefix=/work/openssl-install"
-./dockbuild-centos5-devtoolset2-gcc4 bash -c "cd ${OPENSSL_ROOT}; make"
-
-# Download CMake
-git clone git://github.com/kitware/cmake -b v3.11.0 --depth 1
-
-# Configure CMake
-./dockbuild-centos5-devtoolset2-gcc4 \
-  cmake \
-    -Bcmake-build -Hcmake \
-    -GNinja \
-    -DCMAKE_BUILD_TYPE:STRING=Release \
-    -DCMAKE_C_STANDARD:STRING=11 \
-    -DCMAKE_CXX_STANDARD:STRING=14 \
-    -DCMAKE_C_FLAGS:STRING="-D_POSIX_C_SOURCE=199506L -D_POSIX_SOURCE=1 -D_SVID_SOURCE=1 -D_BSD_SOURCE=1" \
-    -DCMAKE_EXE_LINKER_FLAGS:STRING="-static-libstdc++ -static-libgcc" \
-    -DCPACK_SYSTEM_NAME:STRING=Centos5-x86_64 \
-    -DCMAKE_USE_OPENSSL:BOOL=ON \
-    -DOPENSSL_CRYPTO_LIBRARY:STRING="/work/${OPENSSL_ROOT}/libcrypto.a;-pthread" \
-    -DOPENSSL_INCLUDE_DIR:PATH=/work/${OPENSSL_ROOT}/include \
-    -DOPENSSL_SSL_LIBRARY:FILEPATH=/work/${OPENSSL_ROOT}/libssl.a \
-    -DBUILD_QtDialog:BOOL=FALSE \
-    -DCMAKE_SKIP_BOOTSTRAP_TEST:STRING=TRUE
-
-# Build and Package CMake
-./dockbuild-centos5-devtoolset2-gcc4 bash -c "cd cmake-build; ninja package"
+# Build x86_64 package
+./generate_package.sh -cmake-version ${CMAKE_VERSION}
 ```
 
 ### certificates
