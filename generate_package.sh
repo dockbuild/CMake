@@ -71,12 +71,13 @@ set -x
 
 #-----------------------------------------------------------------------------
 
+OPENSSL_ROOT=openssl-1.0.2o
+
 # Cleanup
 rm -rf ${OPENSSL_ROOT} openssl-install
 rm -rf cmake cmake-build
 
 # Download OpenSSL
-OPENSSL_ROOT=openssl-1.0.2o
 OPENSSL_HASH=ec3f5c9714ba0fd45cb4e087301eb1336c317e0d20b575a125050470e8089e4d
 
 [ ! -f ${OPENSSL_ROOT}.tar.gz ] && curl -#LO https://www.openssl.org/source/${OPENSSL_ROOT}.tar.gz
