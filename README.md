@@ -50,7 +50,7 @@ pip install githubrelease
 
 export GITHUB_TOKEN=xxxxx
 
-githubrelease release dockbuild/cmake create v${CMAKE_VERSION} --name "v${CMAKE_VERSION} for Centos5" --publish cmake-3.12.1-Centos5-*.tar.gz
+githubrelease release dockbuild/cmake create v${CMAKE_VERSION} --name "v${CMAKE_VERSION} for Centos5" --publish cmake-${CMAKE_VERSION}-Centos5-*.tar.gz
 
 deactivate && \
 rmvirtualenv dockbuild-cmake
