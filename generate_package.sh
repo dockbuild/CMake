@@ -71,16 +71,23 @@ set -x
 
 #-----------------------------------------------------------------------------
 
-OPENSSL_ROOT=openssl-1.0.2o
+OPENSSL_VERSION_MAJOR=1
+OPENSSL_VERSION_MINOR=0
+OPENSSL_VERSION_PATCH=2
+OPENSSL_VERSION_L="o"
+OPENSSL_VERSION=${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_PATCH}
+OPENSSL_VERSION_FULL=${OPENSSL_VERSION}${OPENSSL_VERSION_L}
+OPENSSL_ROOT=openssl-${OPENSSL_VERSION_FULL}
 
 # Cleanup
 rm -rf ${OPENSSL_ROOT} openssl-install
 rm -rf cmake cmake-build
 
 # Download OpenSSL
+OPENSSL_URL="https://www.openssl.org/source/old/${OPENSSL_VERSION}/${OPENSSL_ROOT}.tar.gz"
 OPENSSL_HASH=ec3f5c9714ba0fd45cb4e087301eb1336c317e0d20b575a125050470e8089e4d
 
-[ ! -f ${OPENSSL_ROOT}.tar.gz ] && curl -#LO https://www.openssl.org/source/${OPENSSL_ROOT}.tar.gz
+[ ! -f ${OPENSSL_ROOT}.tar.gz ] && curl -#LO ${OPENSSL_URL}
 echo "${OPENSSL_HASH}  ${OPENSSL_ROOT}.tar.gz" > ${OPENSSL_ROOT}.tar.gz.sha256
 sha256sum -c ${OPENSSL_ROOT}.tar.gz.sha256
 
