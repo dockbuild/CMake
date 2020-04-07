@@ -13,6 +13,7 @@ BUILD_FLAG=
 CPACK_PACKAGE_NAME_ARCH=x86_64
 WRAPPER=""
 OPENSSL_CONFIG_FLAG=""
+LIBUV_LIB_DIR=lib64
 
 #-----------------------------------------------------------------------------
 while [ $# -gt 0 ]; do
@@ -27,6 +28,7 @@ while [ $# -gt 0 ]; do
       OPENSSL_CONFIG_FLAG="-m32"
       BUILD_IMAGE=dockcross/manylinux-x86
       CPACK_PACKAGE_NAME_ARCH=x86
+      LIBUV_LIB_DIR=lib
       ;;
     -build)
       BUILD=1
@@ -70,17 +72,18 @@ fi
 set -x
 
 #-----------------------------------------------------------------------------
-
-OPENSSL_VERSION_MAJOR=1
-OPENSSL_VERSION_MINOR=0
-OPENSSL_VERSION_PATCH=2
 OPENSSL_VERSION_L="o"
-OPENSSL_VERSION=${OPENSSL_VERSION_MAJOR}.${OPENSSL_VERSION_MINOR}.${OPENSSL_VERSION_PATCH}
+OPENSSL_VERSION="1.0.2"
 OPENSSL_VERSION_FULL=${OPENSSL_VERSION}${OPENSSL_VERSION_L}
 OPENSSL_ROOT=openssl-${OPENSSL_VERSION_FULL}
 
+LIBUV_VERSION="v1.23.0"
+LIBUV_ROOT=libuv-${LIBUV_VERSION}
+
+#-----------------------------------------------------------------------------
 # Cleanup
 rm -rf ${OPENSSL_ROOT} openssl-install
+rm -rf ${LIBUV_ROOT} libuv-build libuv-install
 rm -rf cmake cmake-build
 
 # Download OpenSSL
@@ -100,6 +103,26 @@ ${WRAPPER} ./config no-ssl2 no-shared -fPIC ${OPENSSL_CONFIG_FLAG} --prefix=/wor
 ${WRAPPER} make
 ${WRAPPER} make install_sw
 
+#-----------------------------------------------------------------------------
+# Download libuv
+LIBUV_URL=https://dist.libuv.org/dist/${LIBUV_VERSION}/${LIBUV_ROOT}.tar.gz
+LIBUV_HASH=d1746d324dea973d9f4c7ff40ba9cf60556c0bae9a92ad970568211b0e3bce27
+
+[ ! -f ${LIBUV_ROOT}.tar.gz ] && curl -#LO ${LIBUV_URL}
+echo "${LIBUV_HASH}  ${LIBUV_ROOT}.tar.gz" > ${LIBUV_ROOT}.tar.gz.sha256
+sha256sum -c ${LIBUV_ROOT}.tar.gz.sha256
+
+# Extract
+tar -xf ${LIBUV_ROOT}.tar.gz
+
+# Configure and build libuv
+cmake \
+  -Blibuv-build -H${LIBUV_ROOT} \
+  -GNinja \
+  -DCMAKE_INSTALL_PREFIX:PATH=/work/libuv-install
+cmake --build libuv-build --target install
+
+#-----------------------------------------------------------------------------
 # Download CMake
 cd /work/
 git clone git://github.com/kitware/cmake -b v${CMAKE_VERSION} --depth 1
@@ -112,12 +135,15 @@ ${WRAPPER} cmake \
   -DCMAKE_C_STANDARD:STRING=11 \
   -DCMAKE_CXX_STANDARD:STRING=14 \
   -DCMAKE_C_FLAGS:STRING="-D_POSIX_C_SOURCE=199506L -D_POSIX_SOURCE=1 -D_SVID_SOURCE=1 -D_BSD_SOURCE=1" \
-  -DCMAKE_EXE_LINKER_FLAGS:STRING="-static-libstdc++ -static-libgcc" \
+  -DCMAKE_EXE_LINKER_FLAGS:STRING="-static-libstdc++ -static-libgcc -lrt" \
   -DCPACK_SYSTEM_NAME:STRING=Centos5-${CPACK_PACKAGE_NAME_ARCH} \
   -DCMAKE_USE_OPENSSL:BOOL=ON \
   -DOPENSSL_CRYPTO_LIBRARY:STRING="/work/${OPENSSL_ROOT}/libcrypto.a;-pthread" \
   -DOPENSSL_INCLUDE_DIR:PATH=/work/${OPENSSL_ROOT}/include \
   -DOPENSSL_SSL_LIBRARY:FILEPATH=/work/${OPENSSL_ROOT}/libssl.a \
+  -DCMAKE_USE_SYSTEM_LIBRARY_LIBUV:BOOL=ON \
+  -DLibUV_LIBRARY:FILEPATH=/work/libuv-install/${LIBUV_LIB_DIR}/libuv_a.a \
+  -DLibUV_INCLUDE_DIR:PATH=/work/libuv-install/include \
   -DBUILD_QtDialog:BOOL=FALSE \
   -DCMAKE_SKIP_BOOTSTRAP_TEST:STRING=TRUE
 
