@@ -7,7 +7,7 @@ BUILD_SCRIPT="${BASH_SOURCE[0]}"
 BUILD_SCRIPT_NAME=$(basename ${BUILD_SCRIPT})
 
 BUILD=0
-BUILD_IMAGE=dockbuild/centos5-devtoolset2-gcc4
+BUILD_IMAGE=dockbuild/centos7-devtoolset7-gcc7
 
 BUILD_FLAG=
 CPACK_PACKAGE_NAME_ARCH=x86_64
@@ -72,12 +72,12 @@ fi
 set -x
 
 #-----------------------------------------------------------------------------
-OPENSSL_VERSION_L="o"
-OPENSSL_VERSION="1.0.2"
+OPENSSL_VERSION_L="j"
+OPENSSL_VERSION="1.1.1"
 OPENSSL_VERSION_FULL=${OPENSSL_VERSION}${OPENSSL_VERSION_L}
 OPENSSL_ROOT=openssl-${OPENSSL_VERSION_FULL}
 
-LIBUV_VERSION="v1.23.0"
+LIBUV_VERSION="v1.41.0"
 LIBUV_ROOT=libuv-${LIBUV_VERSION}
 
 #-----------------------------------------------------------------------------
@@ -88,7 +88,7 @@ rm -rf cmake cmake-build
 
 # Download OpenSSL
 OPENSSL_URL="https://www.openssl.org/source/old/${OPENSSL_VERSION}/${OPENSSL_ROOT}.tar.gz"
-OPENSSL_HASH=ec3f5c9714ba0fd45cb4e087301eb1336c317e0d20b575a125050470e8089e4d
+OPENSSL_HASH=aaf2fcb575cdf6491b98ab4829abf78a3dec8402b8b81efc8f23c00d443981bf
 
 [ ! -f ${OPENSSL_ROOT}.tar.gz ] && curl -#LO ${OPENSSL_URL}
 echo "${OPENSSL_HASH}  ${OPENSSL_ROOT}.tar.gz" > ${OPENSSL_ROOT}.tar.gz.sha256
@@ -106,7 +106,7 @@ ${WRAPPER} make install_sw
 #-----------------------------------------------------------------------------
 # Download libuv
 LIBUV_URL=https://dist.libuv.org/dist/${LIBUV_VERSION}/${LIBUV_ROOT}.tar.gz
-LIBUV_HASH=d1746d324dea973d9f4c7ff40ba9cf60556c0bae9a92ad970568211b0e3bce27
+LIBUV_HASH=1184533907e1ddad9c0dcd30a5abb0fe25288c287ff7fee303fff7b9b2d6eb6e
 
 [ ! -f ${LIBUV_ROOT}.tar.gz ] && curl -#LO ${LIBUV_URL}
 echo "${LIBUV_HASH}  ${LIBUV_ROOT}.tar.gz" > ${LIBUV_ROOT}.tar.gz.sha256
@@ -136,7 +136,7 @@ ${WRAPPER} cmake \
   -DCMAKE_CXX_STANDARD:STRING=14 \
   -DCMAKE_C_FLAGS:STRING="-D_POSIX_C_SOURCE=199506L -D_POSIX_SOURCE=1 -D_SVID_SOURCE=1 -D_BSD_SOURCE=1" \
   -DCMAKE_EXE_LINKER_FLAGS:STRING="-static-libstdc++ -static-libgcc -lrt" \
-  -DCPACK_SYSTEM_NAME:STRING=Centos5-${CPACK_PACKAGE_NAME_ARCH} \
+  -DCPACK_SYSTEM_NAME:STRING=Centos7-${CPACK_PACKAGE_NAME_ARCH} \
   -DCMAKE_USE_OPENSSL:BOOL=ON \
   -DOPENSSL_CRYPTO_LIBRARY:STRING="/work/${OPENSSL_ROOT}/libcrypto.a;-pthread" \
   -DOPENSSL_INCLUDE_DIR:PATH=/work/${OPENSSL_ROOT}/include \
